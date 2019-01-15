@@ -1,6 +1,5 @@
 # Dataloader for Data objects, adapted from PyTorch Geometric repository at https://github.com/rusty1s/pytorch_geometric
 # Load modules
-from __future__ import print_function, division
 import torch.utils.data
 from batch_PyTorch import Batch
 
