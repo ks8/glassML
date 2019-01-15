@@ -1,13 +1,16 @@
 # Batch class for mini-batch parallelization, adapted from PyTorch Geometric repository at
 # https://github.com/rusty1s/pytorch_geometric
 # Load modules
-from __future__ import print_function, division
 import torch
 from Data_PyTorch import Data
 
 
 class Batch(Data):
-    """Batch class for mini-batch parallelization"""
+    """
+    Batch class for mini-batch parallelization. All of the methods of class Data can be used.
+    In addition, single graphs can be reconstructed via the assignment vector, batch, which
+    maps each node to its respective graph identifier.
+    """
 
     def __init__(self, batch=None, **kwargs):
         super(Batch, self).__init__(**kwargs)
