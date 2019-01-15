@@ -96,11 +96,11 @@ class Data(object):
 
 	def cat_dim(self, key):
 		"""
-		Helper function for determining how to concatenate data attributes
+		Returns the dimension in which the attribute should be concatenated when creating batches.
 		:param key: Data() key such as 'x' or 'pos'
-		:return: Either -1 for dtype torch.long or 0 otherwise
+		:return: Either -1 for 'edge_index' attributes or 0 otherwise
 		"""
-		return -1 if self[key].dtype == torch.long else 0
+		return -1 if key in ['edge_index'] else 0
 
 	@property
 	def num_nodes(self):
