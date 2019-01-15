@@ -16,7 +16,7 @@ class GlassDataset(Dataset):
 		"""
 		Custom dataset for 2D glass data
 		:param metadata_file: Path to metadata file
-		:param transform: Set of transforms to apply to the data
+		:param transform: Transform to apply to the data (can be a Compose() object)
 		"""
 		super(Dataset, self).__init__()
 		self.metadata = json.load(open(metadata_file, 'r'))
