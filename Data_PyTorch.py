@@ -1,8 +1,7 @@
 # Custom data objects, adapted from PyTorch Geometric repository at https://github.com/rusty1s/pytorch_geometric
 # Load modules
-from __future__ import print_function, division
 import torch
-from loop_PyTorch import contains_self_loops, remove_self_loops
+from loop_PyTorch import contains_self_loops
 from isolated_PyTorch import contains_isolated_nodes
 
 
@@ -11,7 +10,7 @@ class Data(object):
 
 	def __init__(self, x=None, edge_index=None, edge_attr=None, y=None, pos=None):
 		"""
-		Custom data class for graph objects. Note: below, 'data' refors to an example instance of Data().
+		Custom data class for graph objects. Note: below, 'data' refers to an example instance of Data().
 		:param x: (torch.Tensor, preferable type torch.float): node feature matrix, shape [num_nodes, num_node_features]
 		:param edge_index: (torch.Tensor of dype torch.long): graph connectivity matrix in COO format, shape [2, num_edges]
 		:param edge_attr: (torch.Tensor, preferably type torch.float): edge feature matrix,
