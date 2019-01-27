@@ -111,17 +111,43 @@ class Molecule:
                 out.write(str(self.atom_types[i]) + '   ' + str(self.x[i][0]) + '   ' + str(self.x[i][1]))
                 out.write('\n')
 
-    def plot_config(self, outputfile: str, figsize: int = 250, trimfrac: float = 0.1, color1: str = 'orange',
-                    color2: str = 'blue'):
+    def plot_config(self, outputfile: str, dimensions: List[Union[float, None]], figsize: int = 250,
+                    trimfrac: float = 0.1, color1: str = 'orange', color2: str = 'blue'):
         """
         Create images of atomic configurations saved as a .png file
         :param outputfile: Output file name
+        :param dimensions: Dimensions to capture in the output file, given as [xlo, xhi, ylo, yhi]
         :param figsize: Image size in pixels
         :param trimfrac: Trim fraction, which is used to expand image before cropping, a process intended to remove
         any extra white space or frame from matplotlib plot
         :param color1: Color of type 1 atoms
         :param color2: Color of type 2 atoms
         """
+
+        # Extract a subset of the snapshot if dimensions are specified
+        xlo = dimensions[0]
+        xhi = dimensions[1]
+        ylo = dimensions[2]
+        yhi = dimensions[3]
+
+        if xlo is None or xhi is None or ylo is None or yhi is None:
+            check_dimensions = False
+        else:
+            check_dimensions = True
+
+        if check_dimensions:
+            pos = []
+            types = []
+            for i in range(self.natoms):
+                if xlo <= self.x[i][0] <= xhi and ylo <= self.x[i][1] <= yhi:
+                    pos.append(self.x[i])
+                    types.append(self.atom_types[i])
+            pos = np.array(pos)
+            types = np.array(types)
+
+        else:
+            pos = self.x
+            types = self.atom_types
 
         dpi = 100  # dpi of images
 
@@ -133,11 +159,11 @@ class Molecule:
         axisrange = np.array([0, 0, 1, 1])
         fig.add_axes(axisrange)
 
-        sel = self.atom_types == 1
-        x, y = self.x[sel, 0], self.x[sel, 1]
+        sel = types == 1
+        x, y = pos[sel, 0], pos[sel, 1]
         plt.scatter(x, y, s=1, color=color1)
-        sel = self.atom_types == 2
-        x, y = self.x[sel, 0], self.x[sel, 1]
+        sel = types == 2
+        x, y = pos[sel, 0], pos[sel, 1]
         plt.scatter(x, y, s=1, color=color2)
 
         plt.axis('equal')
@@ -148,14 +174,15 @@ class Molecule:
         os.remove("tmp.png")
 
         center = figsizeextra / 2.0
-        lo = int(center - 0.5 * figsize)
-        hi = int(center + 0.5 * figsize)
+        lo = int(center - 0.5*figsize)
+        hi = int(center + 0.5*figsize)
         area = (lo, lo, hi, hi)
         cropped_img = img.crop(area)
         cropped_img.save(outputfile+'.png')
 
 
-def main(trajfile: str, timestep: int, outputfile: str, file_format: str, dimensions: List[Union[float, None]]):
+def main(trajfile: str, timestep: int, outputfile: str, file_format: str, dimensions: List[Union[float, None]],
+         trimfrac: float, figsize: int):
     """
     Execute reading and analysis of a trajectory file
     :param trajfile: Trajectory file containing atom types and atom positions
@@ -163,6 +190,9 @@ def main(trajfile: str, timestep: int, outputfile: str, file_format: str, dimens
     :param outputfile: Filename for output coordinate file
     :param file_format: Format is set to coords or image
     :param dimensions: Dimensions to capture in the output file, given as [xlo, xhi, ylo, yhi]'
+    :param trimfrac: Trim fraction, which is used to expand image before cropping, a process intended to remove
+    any extra white space or frame from matplotlib plot
+    :param figsize: Image size in pixels
     """
     mol = Molecule()
     mol.read_dump_timestep(trajfile, timestep)
@@ -170,5 +200,5 @@ def main(trajfile: str, timestep: int, outputfile: str, file_format: str, dimens
     if file_format == 'coords':
         mol.coord_config(outputfile, dimensions)
     elif file_format == 'image':
-        mol.plot_config(outputfile, trimfrac=0.1)
+        mol.plot_config(outputfile, dimensions, trimfrac=trimfrac, figsize=figsize)
 

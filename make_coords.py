@@ -14,13 +14,15 @@ def process_coordinates(args):
     timestep = args.timestep
     dimensions = [args.xlo, args.xhi, args.ylo, args.yhi]
     file_format = args.file_format
+    trimfrac = args.trimfrac
+    figsize = args.figsize
 
     for i in range(args.num_trajectories):
         print(i)
         trajfile = args.data+'/'+str(i)+'/traj.atom'
         outputfile = args.output+'/'+args.type+'.'+'{:05d}'.format(i)
 
-        coords_config.main(trajfile, timestep, outputfile, file_format, dimensions)
+        coords_config.main(trajfile, timestep, outputfile, file_format, dimensions, trimfrac, figsize)
 
 
 def main():
@@ -42,6 +44,10 @@ def main():
     parser.add_argument('-type', type=str, dest='type', default=None, help='Specify liquid or glass')
     parser.add_argument('-num_trajectories', type=int, dest='num_trajectories', default=None,
                         help='Number of trajectory files to read')
+    parser.add_argument('-trimfrac', type=float, dest='trimfrac', default=0.1,
+                        help='Trim fraction for plotting')
+    parser.add_argument('-figsize', type=float, dest='figsize', default=250,
+                        help='Image size in pixels (square image)')
 
     args = parser.parse_args()
 
