@@ -21,7 +21,7 @@ from train import train
 from utils import load_checkpoint, save_checkpoint
 
 from chemprop.nn_utils import NoamLR, param_count
-from chemprop.parsing import parse_train_args
+from parsing import parse_train_args
 from chemprop.utils import get_loss_func, get_metric_func
 
 
@@ -36,9 +36,9 @@ def run_training(args: Namespace, logger: Logger = None):
 
     # Load data
     debug('Loading data')
-    train_data = GlassDataset('train-metadata/train-metadata.json', transform=Compose([NNGraph(5), Distance(False)]))
-    val_data = GlassDataset('test-metadata/test-metadata.json', transform=Compose([NNGraph(5), Distance(False)]))
-    test_data = val_data  # TODO: get separate val/test sets
+    train_data = GlassDataset(args.train_data_path, transform=Compose([NNGraph(args.num_neighbors), Distance(False)]))
+    val_data = GlassDataset(args.val_data_path, transform=Compose([NNGraph(args.num_neighbors), Distance(False)]))
+    test_data = GlassDataset(args.test_data_path, transform=Compose([NNGraph(args.num_neighbors), Distance(False)]))
     args.atom_fdim = 3
     args.bond_fdim = args.atom_fdim + 1
 

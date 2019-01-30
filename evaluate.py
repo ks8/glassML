@@ -29,6 +29,7 @@ def evaluate(model: nn.Module,
 
         preds = []
         for batch in data:
+
             targets.extend(batch.y.float().unsqueeze(1))
 
             # Prepare batch

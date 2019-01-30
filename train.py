@@ -42,8 +42,11 @@ def train(model: nn.Module,
 
     loss_sum, iter_count = 0, 0
     for batch in tqdm(data, total=len(data)):
-        targets = batch.y.float().unsqueeze(1)
-        batch = GlassBatchMolGraph(batch)
+        if args.cuda:
+            targets = batch.y.float().unsqueeze(1).cuda()
+        else:
+            targets = batch.y.float().unsqueeze(1)
+        batch = GlassBatchMolGraph(batch)  # TODO: Apply a check for connectivity of graph
 
         # Run model
         model.zero_grad()
