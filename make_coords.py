@@ -17,7 +17,7 @@ def process_coordinates(args):
     trimfrac = args.trimfrac
     figsize = args.figsize
 
-    for i in range(args.num_trajectories):
+    for i in range(args.traj_file_start, args.traj_file_start + args.num_trajectories):
         print(i)
         trajfile = args.data+'/'+str(i)+'/traj.atom'
         outputfile = args.output+'/'+args.type+'.'+'{:05d}'.format(i)
@@ -42,6 +42,8 @@ def main():
     parser.add_argument('-ylo', type=float, dest='ylo', default=None, help='ylo dimension for reading coordinates')
     parser.add_argument('-yhi', type=float, dest='yhi', default=None, help='yhi dimension for reading coordinates')
     parser.add_argument('-type', type=str, dest='type', default=None, help='Specify liquid or glass')
+    parser.add_argument('-traj_file_start', type=int, dest='traj_file_start', default=0,
+                        help='Initial directory name for trajectory files: usually begins with 0 or 1')
     parser.add_argument('-num_trajectories', type=int, dest='num_trajectories', default=None,
                         help='Number of trajectory files to read')
     parser.add_argument('-trimfrac', type=float, dest='trimfrac', default=0.1,
