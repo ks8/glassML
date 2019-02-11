@@ -236,7 +236,7 @@ def main():
                         help='Lower y-dimension bound on the bulk film region')
     parser.add_argument('--bulk_hi', type=float, dest='bulk_hi', default=65.0,
                         help='Upper y-dimension bound on the bulk film region')
-    parser.add_argument('--num_turns_final_relaxation', type=int, dest='num_turns_final_relaxation', default=1000000,
+    parser.add_argument('--num_turns_final_relaxation', type=int, dest='num_turns_final_relaxation', default=10000000,
                         help='Number of integrator turns for each deposition step')
     parser.add_argument('--EIS_file', type=str, dest='EIS_file', default='EIS',
                         help='Text file containing final value of bulk inherent structural energy')
