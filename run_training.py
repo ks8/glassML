@@ -148,6 +148,8 @@ def run_training(args: Namespace, logger: Logger = None):
         info('Model {} test {} = {:.3f}'.format(model_idx, args.metric, avg_test_score))
         writer.add_scalar('test_{}'.format(args.metric), avg_test_score, n_iter)
 
+        return avg_test_score  # For hyperparameter optimization use
+
 
 if __name__ == '__main__':
     args = parse_train_args()
