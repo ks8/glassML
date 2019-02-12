@@ -13,7 +13,7 @@ def average_energy(args):
     for i in range(args.traj_file_start, args.traj_file_start + args.num_trajectories):
         print(i)
         data = np.loadtxt(args.data + '/' + str(i) + '/' + 'cooling.dat')
-        total_data[i] = data
+        total_data[i-1] = data
 
     total_data_mean = np.mean(total_data, axis=0)
     total_data_std = np.std(total_data, axis=0)
