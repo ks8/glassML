@@ -117,7 +117,7 @@ def pvd_simulation(args):
         # Create a harmonic wall
         wallDist = 10.0
         topWall = FixWallHarmonic(state, handle='wall', groupHandle='all', origin=Vector(0, 13, 0),
-                                  forceDir=Vector(0, -1, 0), dist=wallDist, k=15)
+                                  forceDir=Vector(0, -1, 0), dist=wallDist, k=args.wall_spring_const)
         state.activateFix(topWall)
 
         # Integrate with the wall present
@@ -235,6 +235,8 @@ def main():
     parser.add_argument('--num_substrate_atoms', type=int, dest='num_substrate_atoms', default=104,
                         help='Number of substrate atoms')
     parser.add_argument('--x_len', type=float, dest='x_len', default=30.0, help='Box length in x dimension')
+    parser.add_argument('--wall_spring_const', type=int, dest='wall_spring_const', default=5,
+                        help='Spring constant for harmonic wall')
     parser.add_argument('--num_turns_deposition', type=int, dest='num_turns_deposition', nargs='*', default=[1000000],
                         help='Number of integrator turns for each deposition step')
     parser.add_argument('--deposition_runs', type=int, dest='deposition_runs', default=55,
