@@ -26,7 +26,7 @@ def create_logger(name: str, save_dir: str = None, quiet: bool = False) -> loggi
 
     if save_dir is not None:
         if save_dir != '':
-            os.makedirs(save_dir, exist_ok=False)
+            os.makedirs(save_dir, exist_ok=True)
 
         fh_v = logging.FileHandler(os.path.join(save_dir, 'verbose.log'))
         fh_v.setLevel(logging.DEBUG)
