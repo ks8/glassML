@@ -24,6 +24,8 @@ from chemprop.nn_utils import NoamLR, param_count
 from parsing import parse_train_args
 from chemprop.utils import get_loss_func, get_metric_func
 
+from create_logger import create_logger
+
 
 def run_training(args: Namespace, logger: Logger = None):
     """Trains a model and returns test scores on the model checkpoint with the highest validation score"""
@@ -154,4 +156,5 @@ def run_training(args: Namespace, logger: Logger = None):
 if __name__ == '__main__':
     args = parse_train_args()
     args.num_tasks = 1
-    run_training(args)
+    logger = create_logger(name='train', save_dir=args.save_dir, quiet=False)
+    run_training(args, logger)

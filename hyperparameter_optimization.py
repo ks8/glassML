@@ -12,6 +12,8 @@ from chemprop.nn_utils import param_count
 from parsing import add_train_args, modify_train_args
 from run_training import run_training
 
+from create_logger import create_logger
+
 
 SPACE = {
     'hidden_size': hp.quniform('hidden_size', low=30, high=1000, q=30),
@@ -24,13 +26,17 @@ INT_KEYS = ['hidden_size', 'depth', 'ffn_num_layers', 'num_neighbors']
 
 
 def grid_search(args: Namespace):
+
+    # Create logger
+    logger = create_logger(name='hyperparameter_optimization', save_dir=args.log_dir, quiet=True)
+
     # Run grid search
     results = []
 
     # Define hyperparameter optimization
     def objective(hyperparams: Dict[str, Union[int, float]]) -> float:
-        # Convert hyperparams from float to int when necessary
 
+        # Convert hyperparams from float to int when necessary
         for key in INT_KEYS:
             hyperparams[key] = int(hyperparams[key])
 
@@ -42,12 +48,16 @@ def grid_search(args: Namespace):
         for key, value in hyperparams.items():
             setattr(hyper_args, key, value)
 
+        logger.info(hyperparams)
+
         # Train
         avg_test_score = run_training(hyper_args)
 
         # Record results
         temp_model = build_model(hyper_args)
         num_params = param_count(temp_model)
+        logger.info(f'num params: {num_params:,}')
+        logger.info(f'{avg_test_score} {hyper_args.metric}')
 
         results.append({
             'avg_test_score': avg_test_score,
@@ -69,10 +79,10 @@ def grid_search(args: Namespace):
     # Report best result
     results = [result for result in results if not np.isnan(result['avg_test_score'])]
     best_result = min(results, key=lambda result: (1 if args.minimize_score else -1) * result['avg_test_score'])
-    print('best')
-    print(best_result['hyperparams'])
-    print(f'num params: {best_result["num_params"]:,}')
-    print(f'{best_result["avg_test_score"]} {args.metric}')
+    logger.info('best')
+    logger.info(best_result['hyperparams'])
+    logger.info(f'num params: {best_result["num_params"]:,}')
+    logger.info(f'{best_result["avg_test_score"]} {args.metric}')
 
     # Save best hyperparameter settings as JSON config file
     with open(args.config_save_path, 'w') as f:
