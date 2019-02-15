@@ -29,6 +29,7 @@ def grid_search(args: Namespace):
 
     # Create logger
     logger = create_logger(name='hyperparameter_optimization', save_dir=args.log_dir, quiet=True)
+    train_logger = create_logger(name='train', save_dir=args.save_dir, quiet=False)
 
     # Run grid search
     results = []
@@ -51,7 +52,7 @@ def grid_search(args: Namespace):
         logger.info(hyperparams)
 
         # Train
-        avg_test_score = run_training(hyper_args)
+        avg_test_score = run_training(hyper_args, train_logger)
 
         # Record results
         temp_model = build_model(hyper_args)
