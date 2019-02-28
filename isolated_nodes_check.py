@@ -42,7 +42,7 @@ def main():
 
     parser.add_argument('--data_path', type=str, dest='data_path', default=None,
                         help='.json metadata file location')
-    parser.add_argument('--num_neighbors', type=int, dest='num_neighbors', default=None,
+    parser.add_argument('--num_neighbors', type=int, dest='num_neighbors', default=1,
                         help='Number of nearest neighbors')
 
     args = parser.parse_args()
