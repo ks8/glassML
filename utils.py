@@ -20,12 +20,12 @@ def save_checkpoint(model: nn.Module, args: Namespace, path: str):
     torch.save(state, path)
 
 
-def load_checkpoint(path: str, cuda: bool = False) -> nn.Module:
+def load_checkpoint(path: str, cuda: bool = False, attention_viz: bool = False) -> nn.Module:
     """
     Loads a model checkpoint and optionally the scaler the model was trained with.
     :param path: Path where checkpoint is saved.
     :param cuda: Whether to move model to cuda.
-    :param logger: A logger.
+    :param attention_viz: Whether to visualize attention.
     :return: The loaded model, data scaler, features scaler, and loaded args.
     """
     # Load model and args
@@ -34,6 +34,7 @@ def load_checkpoint(path: str, cuda: bool = False) -> nn.Module:
 
     # Update args with current args
     args.cuda = cuda
+    args.attention_viz = attention_viz
 
     model = build_model(args)
     model.load_state_dict(loaded_state_dict)
