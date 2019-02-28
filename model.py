@@ -4,7 +4,7 @@ from argparse import Namespace
 
 import torch.nn as nn
 
-from chemprop.models.mpn import MPNEncoder
+from mpn import MPNEncoder
 from chemprop.nn_utils import get_activation_function, initialize_weights
 
 
