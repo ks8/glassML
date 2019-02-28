@@ -22,7 +22,12 @@ from create_logger import create_logger
 
 
 def run_evaluation(args: Namespace, logger: Logger = None):
-    """Evaluates a saved model"""
+    """
+    Evaluates a saved model
+    :param args: Set of args
+    :param logger: Logger saved in save_dir
+    """
+
     if logger is not None:
         debug, info = logger.debug, logger.info
     else:
@@ -46,7 +51,6 @@ def run_evaluation(args: Namespace, logger: Logger = None):
     test_data = DataLoader(test_data, args.batch_size)
 
     # Get loss and metric functions
-    loss_func = get_loss_func(args)
     metric_func = get_metric_func(args.metric)
 
     # Test ensemble of models
@@ -55,7 +59,7 @@ def run_evaluation(args: Namespace, logger: Logger = None):
         # Load/build model
         if args.checkpoint_paths is not None:
             debug('Loading model {} from {}'.format(model_idx, args.checkpoint_paths[model_idx]))
-            model = load_checkpoint(args.checkpoint_paths[model_idx])
+            model = load_checkpoint(args.checkpoint_paths[model_idx], attention_viz=args.attention_viz)
         else:
             debug('Must specify a model to load')
             exit(1)
@@ -83,5 +87,5 @@ def run_evaluation(args: Namespace, logger: Logger = None):
 if __name__ == '__main__':
     args = parse_train_args()
     args.num_tasks = 1
-    logger = create_logger(name='train', save_dir=args.save_dir, quiet=False)
+    logger = create_logger(name='evaluate', save_dir=args.save_dir, quiet=False)
     run_evaluation(args, logger)
