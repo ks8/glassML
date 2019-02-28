@@ -268,6 +268,12 @@ def add_train_args(parser: ArgumentParser):
                         help='True to perform global attention across all messages on each message passing step')
     parser.add_argument('--message_attention_heads', type=int, default=1,
                         help='Number of heads to use for message attention')
+    parser.add_argument('--attention_pooling', action='store_true', default=False,
+                        help='Perform multi-headed attention pooling over the atoms in a molecule')
+    parser.add_argument('--attention_pooling_heads', type=int, default=1,
+                        help='Number of heads to use for multi-headed attention pooling')
+    parser.add_argument('--attention_viz', action='store_true', default=False,
+                        help='Visualizes multi-headed attention pooling')
     parser.add_argument('--master_node', action='store_true', default=False,
                         help='Add a master node to exchange information more easily')
     parser.add_argument('--master_dim', type=int, default=600,
