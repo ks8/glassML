@@ -52,21 +52,21 @@ def run_training(args: Namespace, logger: Logger = None):
         test_data_length)
     )
 
-    # Check for any graphs with isolated nodes
-    for i in range(train_data_length):
-        if train_data[i].contains_isolated_nodes():
-            debug(f'WARNING: Graph {i} in train set contains isolated nodes')
-            exit(1)
-
-    for i in range(val_data_length):
-        if val_data[i].contains_isolated_nodes():
-            debug(f'WARNING: Graph {i} in val set contains isolated nodes')
-            exit(1)
-
-    for i in range(test_data_length):
-        if test_data[i].contains_isolated_nodes():
-            debug(f'WARNING: Graph {i} in test set contains isolated nodes')
-            exit(1)
+    # # Check for any graphs with isolated nodes
+    # for i in range(train_data_length):
+    #     if train_data[i].contains_isolated_nodes():
+    #         debug(f'WARNING: Graph {i} in train set contains isolated nodes')
+    #         exit(1)
+    #
+    # for i in range(val_data_length):
+    #     if val_data[i].contains_isolated_nodes():
+    #         debug(f'WARNING: Graph {i} in val set contains isolated nodes')
+    #         exit(1)
+    #
+    # for i in range(test_data_length):
+    #     if test_data[i].contains_isolated_nodes():
+    #         debug(f'WARNING: Graph {i} in test set contains isolated nodes')
+    #         exit(1)
 
     # Convert to iterators
     train_data = DataLoader(train_data, args.batch_size)
