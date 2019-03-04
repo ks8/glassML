@@ -25,6 +25,8 @@ class GlassBatchMolGraph:
         self.a2b = [[]]  # Maps from an atom index to a list of indices of all bonds that point to that atom
         self.b2a = [0]  # Maps from a bond index to the atom index such that that bond comes from that atom
         self.b2revb = [0]  # Maps from a bond index to the index of the reverse bond (bond i --> j maps to bond j -- > )
+        self.uid = None  # Tensor of uids for this batch
+        self.y = None  # Tensor of labels for this batch
 
         # Atom information
         count = 0
@@ -41,6 +43,10 @@ class GlassBatchMolGraph:
             count += 1
             self.n_atoms += 1
             self.a2b.append([])  # Append an empty list to a2b for every atom in the batch
+
+        # IDs and targets
+        self.uid = example.uid
+        self.y = example.y
 
         start = self.n_atoms - count
         self.a_scope.append((start, count))
@@ -97,8 +103,8 @@ class GlassBatchMolGraph:
 
     def get_components(self) -> Tuple[torch.FloatTensor, torch.FloatTensor,
                                       torch.LongTensor, torch.LongTensor, torch.LongTensor,
-                                      List[Tuple[int, int]], List[Tuple[int, int]]]:
-        return self.f_atoms, self.f_bonds, self.a2b, self.b2a, self.b2revb, self.a_scope, self.b_scope
+                                      List[Tuple[int, int]], List[Tuple[int, int]], torch.LongTensor, torch.LongTensor]:
+        return self.f_atoms, self.f_bonds, self.a2b, self.b2a, self.b2revb, self.a_scope, self.b_scope, self.uid, self.y
 
     def __len__(self) -> int:
         return self.batch_size

@@ -8,7 +8,7 @@ from isolated_PyTorch import contains_isolated_nodes
 # Data class
 class Data(object):
 
-	def __init__(self, x=None, edge_index=None, edge_attr=None, y=None, pos=None):
+	def __init__(self, x=None, edge_index=None, edge_attr=None, y=None, pos=None, uid=None):
 		"""
 		Custom data class for graph objects. Note: below, 'data' refers to an example instance of Data().
 		:param x: (torch.Tensor, preferable type torch.float): node feature matrix, shape [num_nodes, num_node_features]
@@ -17,12 +17,14 @@ class Data(object):
 		shape [num_edges, num_edge_features]
 		:param y: (torch.Tensor): target data, shape arbitrary, but ideally has one dimension only
 		:param pos: (torch.Tensor of type torch.float): node position matrix, shape [num_nodes, num_dimensions]
+		:param label: str label for the data (preferably a unique identifier)
 		"""
 		self.x = x
 		self.edge_index = edge_index
 		self.edge_attr = edge_attr
 		self.y = y
 		self.pos = pos
+		self.uid = uid
 
 	@staticmethod
 	def from_dict(dictionary):

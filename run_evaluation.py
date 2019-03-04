@@ -59,17 +59,14 @@ def run_evaluation(args: Namespace, logger: Logger = None):
         # Load/build model
         if args.checkpoint_paths is not None:
             debug('Loading model {} from {}'.format(model_idx, args.checkpoint_paths[model_idx]))
-            model = load_checkpoint(args.checkpoint_paths[model_idx], attention_viz=args.attention_viz)
+            model = load_checkpoint(args.checkpoint_paths[model_idx], args.save_dir, cuda=args.cuda,
+                                    attention_viz=args.attention_viz)
         else:
             debug('Must specify a model to load')
             exit(1)
 
         debug(model)
         debug('Number of parameters = {:,}'.format(param_count(model)))
-
-        if args.cuda:
-            debug('Moving model to cuda')
-            model = model.cuda()
 
         # Evaluate on test set using model with best validation score
         test_scores = evaluate(

@@ -13,6 +13,7 @@ from chemprop.nn_utils import create_mask, index_select_ND, visualize_atom_atten
     get_activation_function
 
 from visualize_attention_pooling import visualize_attention_pooling
+import os
 
 
 class MPNEncoder(nn.Module):
@@ -255,7 +256,7 @@ class MPNEncoder(nn.Module):
             if self.features_only:
                 return features_batch
 
-        f_atoms, f_bonds, a2b, b2a, b2revb, a_scope, b_scope = mol_graph.get_components()
+        f_atoms, f_bonds, a2b, b2a, b2revb, a_scope, b_scope, uid, targets = mol_graph.get_components()
 
         if self.atom_messages:
             a2a = mol_graph.get_a2a()
@@ -482,8 +483,12 @@ class MPNEncoder(nn.Module):
 
                                 atoms = f_atoms[a_start:a_start + a_size, :].cpu().numpy()
                                 weights = alphas[j].cpu().data.numpy()
+                                id_number = uid[i].item()
+                                label = targets[i].item()
+                                viz_dir = self.args.save_dir + '/' + 'attention_pooling_visualizations'
+                                os.makedirs(viz_dir, exist_ok=True)
 
-                                visualize_attention_pooling(atoms, weights)
+                                visualize_attention_pooling(atoms, weights, id_number, label, viz_dir)
 
                     else:
                         mol_vec = cur_hiddens  # (num_atoms, hidden_size)

@@ -13,17 +13,20 @@ def round_up_to_even(f):
     return np.ceil(f / 2.) * 2
 
 
-def visualize_attention_pooling(atoms, weights):
+def visualize_attention_pooling(atoms, weights, id_number, label, viz_dir):
     """
     Plot attention pooling weights
     :param atoms: Atom coordinates and types for a single example
     :param weights: Attention weights for each atom
+    :param id_number: uid number for this graph
+    :param label: Label value for this graph
+    :param viz_dir: Directory for saving images to
     """
 
     # Transform weights into a range suitable for plotting sizes
     weights = np.expand_dims(weights, axis=1)
     weights = weights - np.min(weights)
-    weights = weights*(50.0 / (np.max(weights) - np.min(weights))) + 1
+    weights = weights*(200.0 / (np.max(weights) - np.min(weights))) + 4
 
     # Concatenate with atom array
     data = np.concatenate((atoms, weights), 1)
@@ -50,11 +53,10 @@ def visualize_attention_pooling(atoms, weights):
 
     plt.axis('equal')
 
-    plt.savefig('test.png')
+    plt.savefig(viz_dir + '/' + str(label) + '-' + str(id_number) + '.png')
 
     plt.clf()
     plt.close()
 
-    # add unique label for each graph and include that in figure label
 
 
