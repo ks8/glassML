@@ -5,6 +5,7 @@ import time
 from DASH import *
 import argparse
 import numpy as np
+import os
 
 
 def pvd_simulation(args):
@@ -14,6 +15,12 @@ def pvd_simulation(args):
     """
 
     assert(args.num_simulations == len(args.substrate_temp) == len(args.num_turns_deposition))
+
+    if os.path.isdir(args.output):
+        print('Output folder already exists')
+        exit(1)
+    else:
+        os.mkdir(args.output)
 
     for sim_number in range(args.num_simulations):
 
@@ -31,9 +38,11 @@ def pvd_simulation(args):
             state.dt = 0.005
 
             # Establish some file names
-            initial_xyz = "init_" + args.output + '_' + str(sim_number) + '_' + str(replica_number)
-            intermediate_xyz = "intermediate_" + args.output + '_' + str(sim_number) + '_' + str(replica_number)
-            restart_file = "restart_" + args.output + '_' + str(sim_number) + '_' + str(replica_number)
+            initial_xyz = args.output + '/' + "init_" + args.output + '_' + str(sim_number) + '_' + str(replica_number)
+            intermediate_xyz = args.output + '/' + "intermediate_" + args.output + '_' + \
+                               str(sim_number) + '_' + str(replica_number)
+            restart_file = args.output + '/' + "restart_" + args.output + '_' + str(sim_number) + \
+                           '_' + str(replica_number)
 
             # Set bounds and 2D attributes
             state.bounds = Bounds(state, lo=Vector(0, 0, 0), hi=Vector(args.x_len, 50, 0))
@@ -134,7 +143,7 @@ def pvd_simulation(args):
             state.createGroup('bulk')
             num_film_atoms = 0
             num_bulk_atoms = 0
-            f = open(args.PE_file + '_' + str(sim_number) + '_' + str(replica_number) + '.txt', 'w')
+            f = open(args.output + '/' + args.PE_file + '_' + str(sim_number) + '_' + str(replica_number) + '.txt', 'w')
             f.write('# ' + 'Deposition Step' + '    ' + 'Bulk Potential Energy' + '\n')
             f.close()
 
@@ -191,11 +200,13 @@ def pvd_simulation(args):
                     state.addToGroup('bulk', new_bulk_atoms)
                     num_bulk_atoms += len(new_bulk_atoms)
                 if num_bulk_atoms > 0:
-                    engDataSimple = state.dataManager.recordEnergy(handle='bulk', mode='scalar', interval=1, fixes=[ljcut])
+                    engDataSimple = state.dataManager.recordEnergy(handle='bulk', mode='scalar', interval=1,
+                                                                   fixes=[ljcut])
                 integrator.run(1)
                 if num_bulk_atoms > 0:
                     for energies in engDataSimple.vals:
-                        f = open(args.PE_file + '_' + str(sim_number) + '_' + str(replica_number) + '.txt', 'a')
+                        f = open(args.output + '/' + args.PE_file + '_' + str(sim_number) + '_' +
+                                 str(replica_number) + '.txt', 'a')
                         f.write(str(i) + '    ' + str(energies / float(num_bulk_atoms)) + '\n')
                         f.close()
                     state.dataManager.stopRecord(engDataSimple)
@@ -210,8 +221,9 @@ def pvd_simulation(args):
                 print(elapsedTime)
 
             # Record final trajectory positions of completed film
-            writer = WriteConfig(state, handle='writer', fn='final_' + args.output + '_' + str(sim_number) + '_' +
-                                                            str(replica_number), format='xyz', writeEvery=1)
+            writer = WriteConfig(state, handle='writer', fn=args.output + '/' + 'final_' + args.output + '_' +
+                                str(sim_number) + '_' + str(replica_number), format='xyz',
+                                 writeEvery=1)
             state.activateWriteConfig(writer)
             integrator.run(1)
             state.deactivateWriteConfig(writer)
@@ -220,7 +232,8 @@ def pvd_simulation(args):
             integratorRelax.run(args.num_turns_final_relaxation - 1, 1)
             engDataSimple = state.dataManager.recordEnergy(handle='bulk', mode='scalar', interval=1, fixes=[ljcut])
             integratorRelax.run(1, 1)
-            f = open(args.EIS_file + '_' + str(sim_number) + '_' + str(replica_number) + '.txt', 'w')
+            f = open(args.output + '/' + args.EIS_file + '_' + str(sim_number) + '_' +
+                     str(replica_number) + '.txt', 'w')
             f.write('# ' + 'Bulk Inherent Structure Energy' + '\n')
             for energies in engDataSimple.vals:
                     f.write(str(energies / float(num_bulk_atoms)))
