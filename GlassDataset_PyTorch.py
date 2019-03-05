@@ -35,6 +35,7 @@ class GlassDataset(Dataset):
 			data.y = torch.tensor([0])
 		else:
 			data.y = torch.tensor([1])
+		data.uid = torch.tensor([int(self.metadata[idx]['uid'])])
 
 		data = data if self.transform is None else self.transform(data)
 
