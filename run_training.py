@@ -71,13 +71,17 @@ def run_training(args: Namespace, logger: Logger = None):
         # Load/build model
         if args.checkpoint_paths is not None:
             debug('Loading model {} from {}'.format(model_idx, args.checkpoint_paths[model_idx]))
-            model = load_checkpoint(args.checkpoint_paths[model_idx], args.save_dir, cuda=args.cuda)
+            model = load_checkpoint(args.checkpoint_paths[model_idx], args.save_dir)
         else:
             debug('Building model {}'.format(model_idx))
             model = build_model(args)
 
         debug(model)
         debug('Number of parameters = {:,}'.format(param_count(model)))
+
+        if args.cuda:
+            debug('Moving model to cuda')
+            model = model.cuda()
 
         # Ensure that model is saved in correct location for evaluation if 0 epochs
         save_checkpoint(model, args, os.path.join(save_dir, 'model.pt'))
