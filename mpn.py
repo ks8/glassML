@@ -13,6 +13,7 @@ from chemprop.nn_utils import create_mask, index_select_ND, visualize_atom_atten
     get_activation_function
 
 from visualize_attention_pooling import visualize_attention_pooling
+from analyze_attention_pooling import analyze_attention_pooling
 import os
 
 
@@ -489,6 +490,7 @@ class MPNEncoder(nn.Module):
                                 os.makedirs(viz_dir, exist_ok=True)
 
                                 visualize_attention_pooling(atoms, weights, id_number, label, viz_dir)
+                                analyze_attention_pooling(atoms, weights, id_number, label, viz_dir)
 
                     else:
                         mol_vec = cur_hiddens  # (num_atoms, hidden_size)
