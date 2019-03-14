@@ -17,11 +17,22 @@ def process_metadata(args):
             path = os.path.join(root, f)
             category = re.findall(r'glass', path)
             if len(category) == 1:
-                material = 'glass'
+                if args.pvd_dataset:
+                    material = 'LC'
+                else:
+                    material = 'glass'
             else:
-                material = 'liquid'
-            uid_start_index = f.find('.') + 1
-            uid = f[uid_start_index:uid_start_index + 5]
+                if args.pvd_dataset:
+                    material = 'PVD'
+                else:
+                    material = 'liquid'
+            if material == 'PVD':
+                uid_start_index = f.find('--') + 2
+                uid_end_index = f.find('_normalized')
+                uid = f[uid_start_index:uid_end_index]
+            else:
+                uid_start_index = f.find('.') + 1
+                uid = f[uid_start_index:uid_start_index + 5]
             data.append({'path': path, 'label': material, 'uid': uid})
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir)
@@ -36,6 +47,7 @@ def main():
 
     parser.add_argument('--data_dir', type=str, dest='data_dir', default=None, help='Directory containing data')
     parser.add_argument('--out_dir', type=str, dest='out_dir', default=None, help='Directory name for metadata')
+    parser.add_argument('--pvd_dataset', action='store_true',  default=False, help='If dataset is PVD vs LC glass')
 
     args = parser.parse_args()
     process_metadata(args)

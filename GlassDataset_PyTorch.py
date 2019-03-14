@@ -31,7 +31,7 @@ class GlassDataset(Dataset):
 		data = Data()
 		data.pos = torch.tensor(coords_file[:, 1:], dtype=torch.float)
 		data.x = torch.tensor([[x] for x in coords_file[:, 0]], dtype=torch.float)
-		if self.metadata[idx]['label'] == 'glass':
+		if self.metadata[idx]['label'] == 'glass' or self.metadata[idx]['label'] == 'LC':
 			data.y = torch.tensor([0])
 		else:
 			data.y = torch.tensor([1])
