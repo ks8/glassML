@@ -13,6 +13,7 @@ from chemprop.nn_utils import create_mask, index_select_ND, visualize_atom_atten
     get_activation_function
 
 from visualize_attention_pooling import visualize_attention_pooling
+from visualize_bond_attention_pooling import visualize_bond_attention_pooling
 from analyze_attention_pooling import analyze_attention_pooling
 import os
 
@@ -51,6 +52,8 @@ class MPNEncoder(nn.Module):
         self.global_attention = args.global_attention
         self.message_attention_heads = args.message_attention_heads
         self.attention_pooling = args.attention_pooling
+        self.bond_attention = args.bond_attention
+        self.bond_attention_pooling = args.bond_attention_pooling
         self.attention_pooling_heads = args.attention_pooling_heads
         self.attention_viz = args.attention_viz
         self.master_node = args.master_node
@@ -204,7 +207,10 @@ class MPNEncoder(nn.Module):
 
         # Readout
         if not (self.master_node and self.use_master_as_output):
-            self.W_o = nn.Linear(self.atom_fdim + self.hidden_size, self.hidden_size)
+            if self.bond_attention_pooling:
+                self.W_o = nn.Linear(self.hidden_size, self.hidden_size)
+            else:
+                self.W_o = nn.Linear(self.atom_fdim + self.hidden_size, self.hidden_size)
 
         if self.deepset:
             self.W_s2s_a = nn.Linear(self.hidden_size, self.hidden_size, bias=self.bias)
@@ -222,7 +228,7 @@ class MPNEncoder(nn.Module):
             self.W_a = nn.Linear(self.hidden_size, self.hidden_size, bias=self.bias)
             self.W_b = nn.Linear(self.hidden_size, self.hidden_size)
 
-        if self.attention_pooling:
+        if self.attention_pooling or self.bond_attention or self.bond_attention_pooling:
             self.W_ap = nn.ModuleList([nn.Linear(self.hidden_size, self.hidden_size, bias=False)
                                        for _ in range(self.attention_pooling_heads)])
             self.V_ap = nn.ModuleList([nn.Linear(self.hidden_size, 1) for _ in range(self.attention_pooling_heads)])
@@ -372,6 +378,45 @@ class MPNEncoder(nn.Module):
                 if viz_dir is not None:
                     visualize_bond_attention(viz_dir, mol_graph, attention_weights, depth)
 
+            if self.bond_attention:
+                alphas = [self.act_func(self.W_ap[j](message)) for j in range(self.attention_pooling_heads)]
+                alphas = [self.V_ap[j](alphas[j]) for j in range(self.attention_pooling_heads)]
+                alphas = [F.softmax(alphas[j], dim=0) for j in range(self.attention_pooling_heads)]
+                alphas = [alphas[j].squeeze(1) for j in range(self.attention_pooling_heads)]
+                att_hiddens = [torch.mul(alphas[j], message.t()).t()
+                               for j in range(self.attention_pooling_heads)]
+                att_hiddens = sum(att_hiddens) / float(self.attention_pooling_heads)
+
+                message = att_hiddens
+
+                if self.attention_viz and depth == self.depth - 2:
+
+                    for i, (a_start, a_size) in enumerate(a_scope):
+                        if a_size == 0:
+                            continue
+                        else:
+                            for j in range(self.attention_pooling_heads):
+
+                                atoms = f_atoms[a_start:a_start + a_size, :].cpu().numpy()
+                                bonds1 = a2b[a_start:a_start + a_size, :]
+                                bonds2 = b2a[b_scope[i][0]:b_scope[i][0] + b_scope[i][1]]
+                                bonds_dict = {}
+                                for k in range(len(bonds2)):
+                                    bonds_dict[k + 1] = bonds2[k].item() - a_start + 1
+                                for k in range(bonds1.shape[0]):
+                                    for m in range(bonds1.shape[1]):
+                                        bond_num = bonds1[k, m].item() - b_scope[i][0] + 1
+                                        if bond_num > 0:
+                                            bonds_dict[bond_num] = (bonds_dict[bond_num], k + 1)
+
+                                weights = alphas[j].cpu().data.numpy()[b_scope[i][0]:b_scope[i][0] + b_scope[i][1]]
+                                id_number = uid[i].item()
+                                label = targets[i].item()
+                                viz_dir = self.args.save_dir + '/' + 'bond_attention_pooling_visualizations'
+                                os.makedirs(viz_dir, exist_ok=True)
+
+                                visualize_bond_attention_pooling(atoms, bonds_dict, weights, id_number, label, viz_dir)
+
             if self.use_layer_norm:
                 message = self.layer_norm(message)
 
@@ -391,12 +436,21 @@ class MPNEncoder(nn.Module):
         if self.learn_virtual_edges:
             message = message * straight_through_mask
 
-        a2x = a2a if self.atom_messages else a2b
-        nei_a_message = index_select_ND(message, a2x)  # num_atoms x max_num_bonds x hidden
-        a_message = nei_a_message.sum(dim=1)  # num_atoms x hidden
-        a_input = torch.cat([f_atoms, a_message], dim=1)  # num_atoms x (atom_fdim + hidden)
-        atom_hiddens = self.act_func(self.W_o(a_input))  # num_atoms x hidden
-        atom_hiddens = self.dropout_layer(atom_hiddens)  # num_atoms x hidden
+        if self.bond_attention_pooling:
+            nei_a_message = index_select_ND(message, a2b)  # num_atoms x max_num_bonds x hidden
+            a_message = nei_a_message.sum(dim=1)  # num_atoms x hidden
+            rev_message = message[b2revb]  # num_bonds x hidden
+            message = a_message[b2a] - rev_message  # num_bonds x hidden
+            message = self.act_func(self.W_o(message))  # num_bonds x hidden
+            bond_hiddens = self.dropout_layer(message)  # num_bonds x hidden
+
+        else:
+            a2x = a2a if self.atom_messages else a2b
+            nei_a_message = index_select_ND(message, a2x)  # num_atoms x max_num_bonds x hidden
+            a_message = nei_a_message.sum(dim=1)  # num_atoms x hidden
+            a_input = torch.cat([f_atoms, a_message], dim=1)  # num_atoms x (atom_fdim + hidden)
+            atom_hiddens = self.act_func(self.W_o(a_input))  # num_atoms x hidden
+            atom_hiddens = self.dropout_layer(atom_hiddens)  # num_atoms x hidden
 
         if self.deepset:
             atom_hiddens = self.W_s2s_a(atom_hiddens)
@@ -449,25 +503,13 @@ class MPNEncoder(nn.Module):
             mol_vecs = query.squeeze(0)  # (batch_size, hidden_size)
         else:
             mol_vecs = []
-            # TODO: Maybe do this in parallel with masking rather than looping
-            for i, (a_start, a_size) in enumerate(a_scope):
-                if a_size == 0:
-                    mol_vecs.append(self.cached_zero_vector)
-                else:
-                    cur_hiddens = atom_hiddens.narrow(0, a_start, a_size)
 
-                    if self.attention:
-                        att_w = torch.matmul(self.W_a(cur_hiddens), cur_hiddens.t())
-                        att_w = F.softmax(att_w, dim=1)
-                        att_hiddens = torch.matmul(att_w, cur_hiddens)
-                        att_hiddens = self.act_func(self.W_b(att_hiddens))
-                        att_hiddens = self.dropout_layer(att_hiddens)
-                        mol_vec = (cur_hiddens + att_hiddens)
-
-                        if viz_dir is not None:
-                            visualize_atom_attention(viz_dir, mol_graph.smiles_batch[i], a_size, att_w)
-
-                    elif self.attention_pooling:
+            if self.bond_attention_pooling:
+                for i, (b_start, b_size) in enumerate(b_scope):
+                    if b_size == 0:
+                        mol_vecs.append(self.cached_zero_vector)
+                    else:
+                        cur_hiddens = bond_hiddens.narrow(0, b_start, b_size)
                         alphas = [self.act_func(self.W_ap[j](cur_hiddens)) for j in range(self.attention_pooling_heads)]
                         alphas = [self.V_ap[j](alphas[j]) for j in range(self.attention_pooling_heads)]
                         alphas = [F.softmax(alphas[j], dim=0) for j in range(self.attention_pooling_heads)]
@@ -478,25 +520,83 @@ class MPNEncoder(nn.Module):
 
                         mol_vec = att_hiddens
 
+                        mol_vec = mol_vec.sum(dim=0)
+                        mol_vecs.append(mol_vec)
+
                         if self.attention_viz:
 
                             for j in range(self.attention_pooling_heads):
 
-                                atoms = f_atoms[a_start:a_start + a_size, :].cpu().numpy()
+                                atoms = f_atoms[a_scope[i][0]:a_scope[i][0] + a_scope[i][1], :].cpu().numpy()
+                                bonds1 = a2b[a_scope[i][0]:a_scope[i][0] + a_scope[i][1], :]
+                                bonds2 = b2a[b_scope[i][0]:b_scope[i][0] + b_scope[i][1]]
+                                bonds_dict = {}
+                                for k in range(len(bonds2)):
+                                    bonds_dict[k + 1] = bonds2[k].item() - a_scope[i][0] + 1
+                                for k in range(bonds1.shape[0]):
+                                    for m in range(bonds1.shape[1]):
+                                        bond_num = bonds1[k, m].item() - b_scope[i][0] + 1
+                                        if bond_num > 0:
+                                            bonds_dict[bond_num] = (bonds_dict[bond_num], k + 1)
+
                                 weights = alphas[j].cpu().data.numpy()
                                 id_number = uid[i].item()
                                 label = targets[i].item()
-                                viz_dir = self.args.save_dir + '/' + 'attention_pooling_visualizations'
+                                viz_dir = self.args.save_dir + '/' + 'bond_attention_pooling_visualizations'
                                 os.makedirs(viz_dir, exist_ok=True)
 
-                                visualize_attention_pooling(atoms, weights, id_number, label, viz_dir)
-                                analyze_attention_pooling(atoms, weights, id_number, label, viz_dir)
+                                visualize_bond_attention_pooling(atoms, bonds_dict, weights, id_number, label,
+                                                                 viz_dir)
 
+            else:
+                # TODO: Maybe do this in parallel with masking rather than looping
+                for i, (a_start, a_size) in enumerate(a_scope):
+                    if a_size == 0:
+                        mol_vecs.append(self.cached_zero_vector)
                     else:
-                        mol_vec = cur_hiddens  # (num_atoms, hidden_size)
+                        cur_hiddens = atom_hiddens.narrow(0, a_start, a_size)
 
-                    mol_vec = mol_vec.sum(dim=0) / a_size
-                    mol_vecs.append(mol_vec)
+                        if self.attention:
+                            att_w = torch.matmul(self.W_a(cur_hiddens), cur_hiddens.t())
+                            att_w = F.softmax(att_w, dim=1)
+                            att_hiddens = torch.matmul(att_w, cur_hiddens)
+                            att_hiddens = self.act_func(self.W_b(att_hiddens))
+                            att_hiddens = self.dropout_layer(att_hiddens)
+                            mol_vec = (cur_hiddens + att_hiddens)
+
+                            if viz_dir is not None:
+                                visualize_atom_attention(viz_dir, mol_graph.smiles_batch[i], a_size, att_w)
+
+                        elif self.attention_pooling:
+                            alphas = [self.act_func(self.W_ap[j](cur_hiddens)) for j in range(self.attention_pooling_heads)]
+                            alphas = [self.V_ap[j](alphas[j]) for j in range(self.attention_pooling_heads)]
+                            alphas = [F.softmax(alphas[j], dim=0) for j in range(self.attention_pooling_heads)]
+                            alphas = [alphas[j].squeeze(1) for j in range(self.attention_pooling_heads)]
+                            att_hiddens = [torch.mul(alphas[j], cur_hiddens.t()).t()
+                                           for j in range(self.attention_pooling_heads)]
+                            att_hiddens = sum(att_hiddens) / float(self.attention_pooling_heads)
+
+                            mol_vec = att_hiddens
+
+                            if self.attention_viz:
+
+                                for j in range(self.attention_pooling_heads):
+
+                                    atoms = f_atoms[a_start:a_start + a_size, :].cpu().numpy()
+                                    weights = alphas[j].cpu().data.numpy()
+                                    id_number = uid[i].item()
+                                    label = targets[i].item()
+                                    viz_dir = self.args.save_dir + '/' + 'attention_pooling_visualizations'
+                                    os.makedirs(viz_dir, exist_ok=True)
+
+                                    visualize_attention_pooling(atoms, weights, id_number, label, viz_dir)
+                                    analyze_attention_pooling(atoms, weights, id_number, label, viz_dir)
+
+                        else:
+                            mol_vec = cur_hiddens  # (num_atoms, hidden_size)
+
+                        mol_vec = mol_vec.sum(dim=0) / a_size  #TODO: remove a_size division in case of attention_pooling
+                        mol_vecs.append(mol_vec)
 
             mol_vecs = torch.stack(mol_vecs, dim=0)  # (num_molecules, hidden_size)
         
