@@ -378,42 +378,45 @@ class MPNEncoder(nn.Module):
                 if viz_dir is not None:
                     visualize_bond_attention(viz_dir, mol_graph, attention_weights, depth)
 
+            # Bond attention during message passing
             if self.bond_attention:
-                alphas = [self.act_func(self.W_ap[j](message)) for j in range(self.attention_pooling_heads)]
-                alphas = [self.V_ap[j](alphas[j]) for j in range(self.attention_pooling_heads)]
-                alphas = [F.softmax(alphas[j], dim=0) for j in range(self.attention_pooling_heads)]
-                alphas = [alphas[j].squeeze(1) for j in range(self.attention_pooling_heads)]
+                alphas = [self.act_func(self.W_ap[j](message)) for j in range(self.attention_pooling_heads)]  # num_bonds x hidden_size
+                alphas = [self.V_ap[j](alphas[j]) for j in range(self.attention_pooling_heads)]  # num_bonds x 1
+                alphas = [F.softmax(alphas[j], dim=0) for j in range(self.attention_pooling_heads)]  # num_bonds x 1
+                alphas = [alphas[j].squeeze(1) for j in range(self.attention_pooling_heads)]  # num_bonds
                 att_hiddens = [torch.mul(alphas[j], message.t()).t()
-                               for j in range(self.attention_pooling_heads)]
-                att_hiddens = sum(att_hiddens) / float(self.attention_pooling_heads)
+                               for j in range(self.attention_pooling_heads)]  # num_bonds x hidden_size
+                att_hiddens = sum(att_hiddens) / float(self.attention_pooling_heads)  # num_bonds x hidden_size
 
-                message = att_hiddens
+                message = att_hiddens  # att_hiddens is the new message
 
-                if self.attention_viz and depth == self.depth - 2:
+                # Create visualizations (time-consuming, best only done on test set)
+                if self.attention_viz and depth == self.depth - 2:  # Visualize at end of primary message passing phase
 
+                    # Loop through the individual graphs in the batch
                     for i, (a_start, a_size) in enumerate(a_scope):
-                        if a_size == 0:
+                        if a_size == 0:  # Skip over empty graphs
                             continue
                         else:
                             for j in range(self.attention_pooling_heads):
-
-                                atoms = f_atoms[a_start:a_start + a_size, :].cpu().numpy()
-                                bonds1 = a2b[a_start:a_start + a_size, :]
-                                bonds2 = b2a[b_scope[i][0]:b_scope[i][0] + b_scope[i][1]]
-                                bonds_dict = {}
-                                for k in range(len(bonds2)):
+                                atoms = f_atoms[a_start:a_start + a_size, :].cpu().numpy()  # Atom features
+                                bonds1 = a2b[a_start:a_start + a_size, :]  # a2b
+                                bonds2 = b2a[b_scope[i][0]:b_scope[i][0] + b_scope[i][1]]  # b2a
+                                bonds_dict = {}  # Dictionary to keep track of atoms that bonds are connecting
+                                for k in range(len(bonds2)):  # Collect info from b2a
                                     bonds_dict[k + 1] = bonds2[k].item() - a_start + 1
-                                for k in range(bonds1.shape[0]):
+                                for k in range(bonds1.shape[0]):  # Collect info from a2b
                                     for m in range(bonds1.shape[1]):
                                         bond_num = bonds1[k, m].item() - b_scope[i][0] + 1
                                         if bond_num > 0:
                                             bonds_dict[bond_num] = (bonds_dict[bond_num], k + 1)
 
+                                # Save weights for this graph
                                 weights = alphas[j].cpu().data.numpy()[b_scope[i][0]:b_scope[i][0] + b_scope[i][1]]
-                                id_number = uid[i].item()
-                                label = targets[i].item()
-                                viz_dir = self.args.save_dir + '/' + 'bond_attention_pooling_visualizations'
-                                os.makedirs(viz_dir, exist_ok=True)
+                                id_number = uid[i].item()  # Graph uid
+                                label = targets[i].item()  # Graph label
+                                viz_dir = self.args.save_dir + '/' + 'bond_attention_visualizations'  # Folder
+                                os.makedirs(viz_dir, exist_ok=True)  # Only create folder if not already exist
 
                                 visualize_bond_attention_pooling(atoms, bonds_dict, weights, id_number, label, viz_dir)
 

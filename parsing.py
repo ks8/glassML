@@ -270,11 +270,13 @@ def add_train_args(parser: ArgumentParser):
     parser.add_argument('--message_attention_heads', type=int, default=1,
                         help='Number of heads to use for message attention')
     parser.add_argument('--attention_pooling', action='store_true', default=False,
-                        help='Perform multi-headed attention pooling over the atoms in a molecule')
+                        help='Perform multi-headed attention pooling over the atoms in a molecule at the end of '
+                             'message passing')
     parser.add_argument('--bond_attention', action='store_true', default=False,
                         help='Perform multi-headed attention over the bonds in a molecule during message passing')
     parser.add_argument('--bond_attention_pooling', action='store_true', default=False,
-                        help='Perform multi-headed attention pooling over the bonds in a molecule')
+                        help='Perform multi-headed attention pooling over the bonds in a molecule at the end of '
+                             'message passing')
     parser.add_argument('--attention_pooling_heads', type=int, default=1,
                         help='Number of heads to use for multi-headed attention pooling')
     parser.add_argument('--attention_viz', action='store_true', default=False,
