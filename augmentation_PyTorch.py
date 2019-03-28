@@ -1,6 +1,4 @@
 # Perform on-the-fly data augmentation
-# Load modules
-from __future__ import print_function, division
 import torch
 import numpy as np
 
@@ -10,7 +8,8 @@ class Augmentation(object):
     def __init__(self, window_length=None):
         """
         Class for performing on-the-fly data augmentation.
-        :param window_length: Length of window used to subsample data
+        :param window_length: Length of window used to subsample data (window length of 1.0 implies no augmentation for
+        normalized data)
         """
         self.window_length = window_length
 

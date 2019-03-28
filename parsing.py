@@ -41,6 +41,7 @@ def add_train_args(parser: ArgumentParser):
     parser.add_argument('--val_data_path', type=str, help='Path to .json file containing validation metadata')
     parser.add_argument('--test_data_path', type=str, help='Path to .json file containing test metadata')
     parser.add_argument('--num_neighbors', type=int, help='Number of nearest neighbors used to build graphs')
+    parser.add_argument('--augmentation_length', type=float, default=0.1, help='Window length for augmentation')
     parser.add_argument('--test', action='store_true', default=False,
                         help='Whether to skip training and only test the model')
     parser.add_argument('--vocab_path', type=str,
@@ -270,6 +271,10 @@ def add_train_args(parser: ArgumentParser):
                         help='Number of heads to use for message attention')
     parser.add_argument('--attention_pooling', action='store_true', default=False,
                         help='Perform multi-headed attention pooling over the atoms in a molecule')
+    parser.add_argument('--bond_attention', action='store_true', default=False,
+                        help='Perform multi-headed attention over the bonds in a molecule during message passing')
+    parser.add_argument('--bond_attention_pooling', action='store_true', default=False,
+                        help='Perform multi-headed attention pooling over the bonds in a molecule')
     parser.add_argument('--attention_pooling_heads', type=int, default=1,
                         help='Number of heads to use for multi-headed attention pooling')
     parser.add_argument('--attention_viz', action='store_true', default=False,
@@ -414,7 +419,7 @@ def modify_train_args(args: Namespace):
     """Modifies and validates training arguments."""
     global temp_dir  # Prevents the temporary directory from being deleted upon function return
 
-    # assert args.data_path is not None
+    assert args.data_path is not None
     assert args.dataset_type is not None
 
     if args.save_dir is not None:

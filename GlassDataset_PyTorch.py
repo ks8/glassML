@@ -12,14 +12,14 @@ from Data_PyTorch import Data
 # Dataset class
 class GlassDataset(Dataset):
 
-	def __init__(self, metadata_file, transform=None):
+	def __init__(self, metadata, transform=None):
 		"""
 		Custom dataset for 2D glass data
-		:param metadata_file: Path to metadata file
+		:param metadata: Metadata contents
 		:param transform: Transform to apply to the data (can be a Compose() object)
 		"""
 		super(Dataset, self).__init__()
-		self.metadata = json.load(open(metadata_file, 'r'))
+		self.metadata = metadata
 		self.transform = transform
 
 	def __len__(self):
