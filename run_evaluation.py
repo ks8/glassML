@@ -5,6 +5,9 @@ from logging import Logger
 from pprint import pformat
 
 import numpy as np
+import json
+
+from sklearn.model_selection import train_test_split
 
 from compose_PyTorch import Compose
 from dataloader_PyTorch import DataLoader
@@ -13,6 +16,7 @@ from evaluate import evaluate
 from GlassDataset_PyTorch import GlassDataset
 from nngraph_PyTorch import NNGraph
 from utils import load_checkpoint
+from augmentation_PyTorch import Augmentation
 
 from chemprop.nn_utils import NoamLR, param_count
 from parsing import parse_train_args
@@ -28,6 +32,7 @@ def run_evaluation(args: Namespace, logger: Logger = None):
     :param logger: Logger saved in save_dir
     """
 
+    # Set up logger
     if logger is not None:
         debug, info = logger.debug, logger.info
     else:
@@ -35,9 +40,18 @@ def run_evaluation(args: Namespace, logger: Logger = None):
 
     debug(pformat(vars(args)))
 
+    # Load metadata
+    metadata = json.load(open(args.data_path, 'r'))
+
+    # Train/val/test split
+    train_metadata, remaining_metadata = train_test_split(metadata, test_size=0.3, random_state=0)
+    validation_metadata, test_metadata = train_test_split(remaining_metadata, test_size=0.5, random_state=0)
+
     # Load data
     debug('Loading data')
-    test_data = GlassDataset(args.test_data_path, transform=Compose([NNGraph(args.num_neighbors), Distance(False)]))
+
+    transform = Compose([Augmentation(args.augmentation_length), NNGraph(args.num_neighbors), Distance(False)])
+    test_data = GlassDataset(test_metadata, transform=transform)
     args.atom_fdim = 3
     args.bond_fdim = args.atom_fdim + 1
 
