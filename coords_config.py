@@ -36,47 +36,77 @@ class Molecule:
         self.natoms = None
         self.timestep = None
 
-    def read_dump_timestep(self, fnme: str, targettimestep: int):
+    def read_dump_timestep(self, fnme: str, targettimestep: int, traj_file_name: str):
         """
         Read atom information from the specified timestep
         :param fnme: File name of trajectory file
         :param targettimestep: Target timestep to collect atom information from
+        :param traj_file_name: Trajectory file name (traj.atom or traj.xyz)
         """
         f = open(fnme)
         reading = True
         found_flag = False
 
-        # Read file lines
-        while reading:
-            line = f.readline()
-            # Check timestep
-            if "TIMESTEP" in line:
-                line = f.readline().split()
-                self.timestep = int(line[0])
-
-            # Check number of atoms
-            elif "NUMBER OF ATOMS" in line:
-                line = f.readline().split()
-                n = int(line[0])
-                self.natoms = n
-                self.x = np.zeros((n, 3))
-                self.atom_types = np.zeros(n)
-
-            # Save atom types nad coordinates at the target timestep
-            elif "ITEM: ATOMS" in line and self.timestep == targettimestep:
-                if self.natoms == 0:
-                    print("Error! No atoms!")
-                    exit(1)
-                for j in range(self.natoms):
+        if traj_file_name == 'traj.atom':
+            # Read file lines
+            while reading:
+                line = f.readline()
+                # Check timestep
+                if "TIMESTEP" in line:
                     line = f.readline().split()
-                    idx = int(line[0])-1
-                    self.atom_types[idx] = int(line[1])
-                    self.x[idx][0] = float(line[2])
-                    self.x[idx][1] = float(line[3])
-                    self.x[idx][2] = float(line[4])
+                    self.timestep = int(line[0])
 
-                reading = False
-                found_flag = True
+                # Check number of atoms
+                elif "NUMBER OF ATOMS" in line:
+                    line = f.readline().split()
+                    n = int(line[0])
+                    self.natoms = n
+                    self.x = np.zeros((n, 3))
+                    self.atom_types = np.zeros(n)
+
+                # Save atom types and coordinates at the target timestep
+                elif "ITEM: ATOMS" in line and self.timestep == targettimestep:
+                    if self.natoms == 0:
+                        print("Error! No atoms!")
+                        exit(1)
+                    for j in range(self.natoms):
+                        line = f.readline().split()
+                        idx = int(line[0])-1
+                        self.atom_types[idx] = int(line[1])
+                        self.x[idx][0] = float(line[2])
+                        self.x[idx][1] = float(line[3])
+                        self.x[idx][2] = float(line[4])
+
+                    reading = False
+                    found_flag = True
+
+        elif traj_file_name == 'traj.xyz':
+            # Read file lines
+            n = int(f.readline().split()[0])
+            self.natoms = n
+            self.x = np.zeros((n, 3))
+            self.atom_types = np.zeros(n)
+
+            while reading:
+                line = f.readline()
+                # Check timestep
+                if 'Timestep:' in line:
+                    self.timestep = int(line.split()[2])
+
+                    # Save atom types and coordinates at the target timestep
+                    if self.timestep == targettimestep:
+                        if self.natoms == 0:
+                            print("Error! No atoms!")
+                            exit(1)
+                        for j in range(self.natoms):
+                            line = f.readline().split()
+                            self.atom_types[j] = int(line[0])
+                            self.x[j][0] = float(line[1])
+                            self.x[j][1] = float(line[2])
+                            self.x[j][2] = float(line[3])
+
+                        reading = False
+                        found_flag = True
 
         f.close()
 
@@ -182,7 +212,7 @@ class Molecule:
 
 
 def main(trajfile: str, timestep: int, outputfile: str, file_format: str, dimensions: List[Union[float, None]],
-         trimfrac: float, figsize: int):
+         trimfrac: float, figsize: int, traj_file_name: str):
     """
     Execute reading and analysis of a trajectory file
     :param trajfile: Trajectory file containing atom types and atom positions
@@ -193,9 +223,10 @@ def main(trajfile: str, timestep: int, outputfile: str, file_format: str, dimens
     :param trimfrac: Trim fraction, which is used to expand image before cropping, a process intended to remove
     any extra white space or frame from matplotlib plot
     :param figsize: Image size in pixels
+    :param traj_file_name: traj.atom or traj.xyz
     """
     mol = Molecule()
-    mol.read_dump_timestep(trajfile, timestep)
+    mol.read_dump_timestep(trajfile, timestep, traj_file_name)
 
     if file_format == 'coords':
         mol.coord_config(outputfile, dimensions)
