@@ -16,13 +16,14 @@ def process_coordinates(args):
     file_format = args.file_format
     trimfrac = args.trimfrac
     figsize = args.figsize
+    traj_file_name = args.traj_file_name
 
     for i in range(args.traj_file_start, args.traj_file_start + args.num_trajectories):
         print(i)
-        trajfile = args.data+'/'+str(i)+'/traj.atom'
+        trajfile = args.data+'/'+str(i)+'/' + args.traj_file_name
         outputfile = args.output+'/'+args.type+'.'+'{:05d}'.format(i)
 
-        coords_config.main(trajfile, timestep, outputfile, file_format, dimensions, trimfrac, figsize)
+        coords_config.main(trajfile, timestep, outputfile, file_format, dimensions, trimfrac, figsize, traj_file_name)
 
 
 def main():
@@ -46,6 +47,8 @@ def main():
                         help='Initial directory name for trajectory files: usually begins with 0 or 1')
     parser.add_argument('-num_trajectories', type=int, dest='num_trajectories', default=None,
                         help='Number of trajectory files to read')
+    parser.add_argument('-traj_file_name', type=str, dest='traj_file_name', default='traj.atom',
+                        help='File name for trajectory files: traj.atom or traj.syz')
     parser.add_argument('-trimfrac', type=float, dest='trimfrac', default=0.1,
                         help='Trim fraction for plotting')
     parser.add_argument('-figsize', type=float, dest='figsize', default=250,
