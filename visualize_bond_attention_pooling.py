@@ -1,4 +1,4 @@
-# Functions for visualizing bond attention pooling
+# Functions for visualizing bond attention
 # Import modules
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ def round_up_to_even(f):
 
 def visualize_bond_attention_pooling(atoms, bonds, weights, id_number, label, viz_dir):
     """
-    Plot attention pooling weights
+    Plot attention weights.
     :param atoms: Atom coordinates and types for a single example
     :param bonds: Bond info for a single example
     :param weights: Attention weights for each atom
@@ -46,10 +46,10 @@ def visualize_bond_attention_pooling(atoms, bonds, weights, id_number, label, vi
 
     sel = atoms[:, 2] == 1
     x, y = atoms[sel, 0], atoms[sel, 1]
-    plt.scatter(x, y, s=4, color='orange', zorder=1)
+    plt.scatter(x, y, s=6, color='orange', zorder=1, label='type 1')
     sel = atoms[:, 2] == 2
     x, y = atoms[sel, 0], atoms[sel, 1]
-    plt.scatter(x, y, s=4, color='blue', zorder=1)
+    plt.scatter(x, y, s=6, color='blue', zorder=1, label='type 2')
 
     plt.axis('equal')
 
