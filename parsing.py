@@ -123,6 +123,12 @@ def add_train_args(parser: ArgumentParser):
                         help='Which fold to use as val for leave-one-out cross val')
     parser.add_argument('--test_fold_index', type=int, default=None,
                         help='Which fold to use as test for leave-one-out cross val')
+    parser.add_argument('--num_val_runs', type=int, default=1,
+                        help='Number of times to iterate through validation set during training '
+                             '(i.e. with data augmentation)')
+    parser.add_argument('--num_test_runs', type=int, default=1,
+                        help='Number of times to iterate through test set during testing '
+                             '(i.e. with data augmentation)')
     parser.add_argument('--seed', type=int, default=0,
                         help='Random seed to use when splitting data into train/val/test sets.'
                              'When `num_folds` > 1, the first fold uses this seed and all'
