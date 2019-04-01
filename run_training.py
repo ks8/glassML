@@ -50,8 +50,8 @@ def run_training(args: Namespace, logger: Logger = None):
     metadata = json.load(open(args.data_path, 'r'))
 
     # Train/val/test split
-    train_metadata, remaining_metadata = train_test_split(metadata, test_size=0.3, random_state=0)
-    validation_metadata, test_metadata = train_test_split(remaining_metadata, test_size=0.5, random_state=0)
+    train_metadata, remaining_metadata = train_test_split(metadata, test_size=0.3, random_state=args.seed)
+    validation_metadata, test_metadata = train_test_split(remaining_metadata, test_size=0.5, random_state=args.seed)
 
     # Load datasets
     debug('Loading data')
@@ -134,12 +134,18 @@ def run_training(args: Namespace, logger: Logger = None):
                 logger=logger,
                 writer=writer
             )
-            val_scores = evaluate(
-                model=model,
-                data=val_data,
-                metric_func=metric_func,
-                args=args,
-            )
+
+            val_scores = []
+            for val_runs in range(args.num_val_runs):
+
+                val_batch_scores = evaluate(
+                    model=model,
+                    data=val_data,
+                    metric_func=metric_func,
+                    args=args,
+                )
+
+                val_scores.append(np.mean(val_batch_scores))
 
             # Average validation score
             avg_val_score = np.mean(val_scores)
@@ -156,19 +162,24 @@ def run_training(args: Namespace, logger: Logger = None):
         info('Model {} best validation {} = {:.3f} on epoch {}'.format(model_idx, args.metric, best_score, best_epoch))
         model = load_checkpoint(os.path.join(save_dir, 'model.pt'), args.save_dir, cuda=args.cuda)
 
-        test_scores = evaluate(
-            model=model,
-            data=test_data,
-            metric_func=metric_func,
-            args=args
-        )
+        test_scores = []
+        for test_runs in range(args.num_test_runs):
+
+            test_batch_scores = evaluate(
+                model=model,
+                data=test_data,
+                metric_func=metric_func,
+                args=args
+            )
+
+            test_scores.append(np.mean(test_batch_scores))
 
         # Average test score
         avg_test_score = np.mean(test_scores)
         info('Model {} test {} = {:.3f}'.format(model_idx, args.metric, avg_test_score))
         writer.add_scalar('test_{}'.format(args.metric), avg_test_score, n_iter)
 
-        return avg_test_score  # For hyperparameter optimization use
+        return avg_test_score  # For hyperparameter optimization or cross validation use
 
 
 if __name__ == '__main__':
