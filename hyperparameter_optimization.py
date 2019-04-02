@@ -4,7 +4,7 @@ import json
 from typing import Dict, Union
 import os
 
-from hyperopt import fmin, hp, tpe
+from hyperopt import fmin, hp, tpe, Trials
 import numpy as np
 
 from chemprop.models import build_model
@@ -14,13 +14,16 @@ from run_training import run_training
 
 from create_logger import create_logger
 
+import pickle
+
 
 SPACE = {
-    'hidden_size': hp.quniform('hidden_size', low=30, high=1000, q=30),
+    'hidden_size': hp.quniform('hidden_size', low=300, high=2400, q=100),
     'depth': hp.quniform('depth', low=2, high=6, q=1),
     'dropout': hp.quniform('dropout', low=0.0, high=0.5, q=0.05),
     'ffn_num_layers': hp.quniform('ffn_num_layers', low=1, high=3, q=1),
-    'num_neighbors': hp.quniform('num_neighbors', low=1, high=10, q=1)
+    'num_neighbors': hp.quniform('num_neighbors', low=1, high=5, q=1),
+    'augmentation_length': hp.quniform('augmentation_length', low=0.05, high=0.3, q=0.05)
 }
 INT_KEYS = ['hidden_size', 'depth', 'ffn_num_layers', 'num_neighbors']
 
@@ -75,7 +78,18 @@ def grid_search(args: Namespace):
 
         return (1 if hyper_args.minimize_score else -1) * avg_test_score
 
-    fmin(objective, SPACE, algo=tpe.suggest, max_evals=args.num_iters)
+    if args.trials_dir is not None:
+        # Load previous trials database
+        trials = pickle.load(open(args.trials_dir + '/' + 'trials.p', 'rb'))
+    else:
+        # Initialize an empty trials database
+        trials = Trials()
+
+    # Run TPE algorithm
+    fmin(objective, SPACE, algo=tpe.suggest, trials=trials, max_evals=args.max_iters)
+
+    # Save trials
+    pickle.dump(trials, open(args.log_dir + '/' + 'trials.p', 'wb'))
 
     # Report best result
     results = [result for result in results if not np.isnan(result['avg_test_score'])]
@@ -86,20 +100,21 @@ def grid_search(args: Namespace):
     logger.info(f'{best_result["avg_test_score"]} {args.metric}')
 
     # Save best hyperparameter settings as JSON config file
-    with open(args.config_save_path, 'w') as f:
+    with open(args.log_dir + '/' + 'best-hyperparams.json', 'w') as f:
         json.dump(best_result['hyperparams'], f, indent=4, sort_keys=True)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     add_train_args(parser)
-    parser.add_argument('--num_iters', type=int, default=20,
+    parser.add_argument('--max_iters', type=int, default=20,
                         help='Number of hyperparameter choices to try')
-    parser.add_argument('--config_save_path', type=str, required=True,
-                        help='Path to .json file where best hyperparameter settings will be written')
     parser.add_argument('--log_dir', type=str,
                         help='(Optional) Path to a directory where all results of the hyperparameter '
                              'optimization will be written')
+    parser.add_argument('--trials_dir', type=str, default=None,
+                        help='(Optional) Path to a directory where previous trial results are written; hyperopt will'
+                             'restart from this info')
     args = parser.parse_args()
     modify_train_args(args)
     args.num_tasks = 1
