@@ -393,6 +393,10 @@ class MPNEncoder(nn.Module):
                 # Create visualizations (time-consuming, best only done on test set)
                 if self.attention_viz and depth == self.depth - 2:  # Visualize at end of primary message passing phase
 
+                    bond_analysis = dict()
+                    for dict_key in range(8):
+                        bond_analysis[dict_key] = []
+
                     # Loop through the individual graphs in the batch
                     for i, (a_start, a_size) in enumerate(a_scope):
                         if a_size == 0:  # Skip over empty graphs
@@ -418,7 +422,30 @@ class MPNEncoder(nn.Module):
                                 viz_dir = self.args.save_dir + '/' + 'bond_attention_visualizations'  # Folder
                                 os.makedirs(viz_dir, exist_ok=True)  # Only create folder if not already exist
 
-                                visualize_bond_attention_pooling(atoms, bonds_dict, weights, id_number, label, viz_dir)
+                                label, num_subgraphs, num_type_2_connections, num_type_1_isolated, num_type_2_isolated = visualize_bond_attention_pooling(atoms, bonds_dict, weights, id_number, label, viz_dir)
+                                bond_analysis[label].append(num_subgraphs)
+                                bond_analysis[label + 2].append(num_type_2_connections)
+                                bond_analysis[label + 4].append(num_type_1_isolated)
+                                bond_analysis[label + 6].append(num_type_2_isolated)
+
+                    # Write analysis results
+                    if not os.path.exists(self.args.save_dir + '/' + 'attention_analysis.txt'):
+                        f = open(self.args.save_dir + '/' + 'attention_analysis.txt', 'w')
+                        f.write('# Category 0 Subgraphs    Category 1 Subgraphs    '
+                                'Category 0 Type 2 Bonds    Category 1 Type 2 Bonds    '  
+                                'Category 0 Type 1 Isolated    Category 1 Type 1 Isolated    '
+                                'Category 0 Type 2 Isolated    Category 1 Type 2 Isolated' '\n')
+                    else:
+                        f = open(self.args.save_dir + '/' + 'attention_analysis.txt', 'a')
+                    f.write(str(np.mean(np.array(bond_analysis[0]))) + '    ' +
+                            str(np.mean(np.array(bond_analysis[1]))) + '    ' +
+                            str(np.mean(np.array(bond_analysis[2]))) + '    ' +
+                            str(np.mean(np.array(bond_analysis[3]))) + '    ' +
+                            str(np.mean(np.array(bond_analysis[4]))) + '    ' +
+                            str(np.mean(np.array(bond_analysis[5]))) + '    ' +
+                            str(np.mean(np.array(bond_analysis[6]))) + '    ' +
+                            str(np.mean(np.array(bond_analysis[7]))) + '    ' + '\n')
+                    f.close()
 
             if self.use_layer_norm:
                 message = self.layer_norm(message)
