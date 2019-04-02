@@ -83,12 +83,17 @@ def run_evaluation(args: Namespace, logger: Logger = None):
         debug('Number of parameters = {:,}'.format(param_count(model)))
 
         # Evaluate on test set using model with best validation score
-        test_scores = evaluate(
-            model=model,
-            data=test_data,
-            metric_func=metric_func,
-            args=args
-        )
+        test_scores = []
+        for test_runs in range(args.num_test_runs):
+
+            test_batch_scores = evaluate(
+                model=model,
+                data=test_data,
+                metric_func=metric_func,
+                args=args
+            )
+
+            test_scores.append(np.mean(test_batch_scores))
 
         # Average test score
         avg_test_score = np.mean(test_scores)
