@@ -54,10 +54,12 @@ def visualize_bond_attention_pooling(atoms, bonds, weights, id_number, label, vi
 
         # Analysis
         if weights[i][0] > 0.11:  # Only consider high attention edges
+            # graph.add_nodes_from([bonds[i + 1][0], bonds[i + 1][1]])  # Record the nodes for this edge
+            # graph.add_edge(bonds[i + 1][0], bonds[i + 1][1])  # Record the edge
+            if atoms[bonds[i + 1][0] - 1, 2] == 2.0 and atoms[bonds[i + 1][1] - 1, 2] == 2.0 and (bonds[i + 1][0], bonds[i + 1][1]) not in graph.edges:  # Num type 2 bonds
+                num_type_2_connections += 1
             graph.add_nodes_from([bonds[i + 1][0], bonds[i + 1][1]])  # Record the nodes for this edge
             graph.add_edge(bonds[i + 1][0], bonds[i + 1][1])  # Record the edge
-            if atoms[bonds[i + 1][0] - 1, 2] == 2.0 and atoms[bonds[i + 1][1] - 1, 2] == 2.0:  # Num type 2 bonds
-                num_type_2_connections += 1
 
     for i in range(len(bonds)):
         if weights[i][0] < 0.11:
