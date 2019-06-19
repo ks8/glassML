@@ -222,8 +222,13 @@ def main(argv):
 	regularizers = tf.nn.l2_loss(W_conv1) + tf.nn.l2_loss(W_conv2) + tf.nn.l2_loss(W_fc1) + tf.nn.l2_loss(W_fc2)
 	loss = tf.reduce_mean(loss + beta*regularizers)
 	train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+
+	# Accuracy
 	correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+	# AUC
+	AUC = tf.metrics.auc(tf.argmax(y_, 1), tf.argmax(y_conv, 1))
 
 	# Save GPU memory preferences
 	config = tf.ConfigProto()
