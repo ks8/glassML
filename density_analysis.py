@@ -75,9 +75,6 @@ def main():
 
     parser.add_argument('-data', type=str, dest='data', default=None, help='xyz file')
     parser.add_argument('-output', type=str, dest='output', default=None, help='File name for output files')
-    parser.add_argument('-step', type=int, dest='step', default=0, help='Which step in the xyz trajectory to analyze')
-    parser.add_argument('-num_atoms', type=int, dest='num_atoms', default=0,
-                        help='Number (constant) of atoms in trajectory')
     parser.add_argument('-num_bins', type=int, dest='num_bins', default=10, help='Number of histogram bins')
     parser.add_argument('-plot_title', type=str, dest='plot_title', default='Density Profile', help='Plot title')
 
