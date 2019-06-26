@@ -22,6 +22,7 @@ from augmentation_PyTorch import Augmentation
 from train import train
 from utils import load_checkpoint, save_checkpoint
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 from chemprop.nn_utils import NoamLR, param_count
 from parsing import parse_train_args
@@ -50,8 +51,32 @@ def run_training(args: Namespace, logger: Logger = None):
     metadata = json.load(open(args.data_path, 'r'))
 
     # Train/val/test split
-    train_metadata, remaining_metadata = train_test_split(metadata, test_size=0.3, random_state=args.seed)
-    validation_metadata, test_metadata = train_test_split(remaining_metadata, test_size=0.5, random_state=args.seed)
+    if args.k_fold_split:
+        data_splits = []
+        kf = KFold(n_splits=args.num_folds, shuffle=True, random_state=args.seed)
+        for train_index, test_index in kf.split(metadata):
+            splits = [train_index, test_index]
+            data_splits.append(splits)
+        data_splits = data_splits[args.fold_index]
+
+        if args.use_inner_test:
+            train_indices, remaining_indices = train_test_split(data_splits[0], test_size=args.val_test_size,
+                                                                random_state=args.seed)
+            validation_indices, test_indices = train_test_split(remaining_indices, test_size=0.5,
+                                                                random_state=args.seed)
+
+        else:
+            train_indices = data_splits[0]
+            validation_indices, test_indices = train_test_split(data_splits[1], test_size=0.5, random_state=args.seed)
+
+        train_metadata = list(np.asarray(metadata)[list(train_indices)])
+        validation_metadata = list(np.asarray(metadata)[list(validation_indices)])
+        test_metadata = list(np.asarray(metadata)[list(test_indices)])
+
+    else:
+        train_metadata, remaining_metadata = train_test_split(metadata, test_size=args.val_test_size,
+                                                              random_state=args.seed)
+        validation_metadata, test_metadata = train_test_split(remaining_metadata, test_size=0.5, random_state=args.seed)
 
     # Load datasets
     debug('Loading data')

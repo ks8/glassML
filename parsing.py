@@ -123,6 +123,13 @@ def add_train_args(parser: ArgumentParser):
                         help='Which fold to use as val for leave-one-out cross val')
     parser.add_argument('--test_fold_index', type=int, default=None,
                         help='Which fold to use as test for leave-one-out cross val')
+    parser.add_argument('--k_fold_split', action='store_true', default=False,
+                        help='Split the data for nested k-fold cross validation')
+    parser.add_argument('--fold_index', type=int, default=None,
+                        help='Which fold to use for k-fold cross validation')
+    parser.add_argument('--val_test_size', type=float, default=0.2, help='Fraction of val + test data')
+    parser.add_argument('--use_inner_test', action='store_true', default=False,
+                        help='Use inner test set as test set during k-fold cross validation')
     parser.add_argument('--num_val_runs', type=int, default=1,
                         help='Number of times to iterate through validation set during training '
                              '(i.e. with data augmentation)')

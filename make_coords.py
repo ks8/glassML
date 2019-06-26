@@ -33,25 +33,25 @@ def main():
     """
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-data', type=str, dest='data', default=None, help='Directory containing trajectory files')
-    parser.add_argument('-output', type=str, dest='output', default=None, help='Directory name for output files')
-    parser.add_argument('-file_format', type=str, dest='file_format', default=None,
+    parser.add_argument('--data', type=str, dest='data', default=None, help='Directory containing trajectory files')
+    parser.add_argument('--output', type=str, dest='output', default=None, help='Directory name for output files')
+    parser.add_argument('--file_format', type=str, dest='file_format', default=None,
                         help='Set format to coords or image')
-    parser.add_argument('-timestep', type=int, dest='timestep', default=None, help='Simulation timestep to read')
-    parser.add_argument('-xlo', type=float, dest='xlo', default=None, help='xlo dimension for reading coordinates')
-    parser.add_argument('-xhi', type=float, dest='xhi', default=None, help='xhi dimension for reading coordinates')
-    parser.add_argument('-ylo', type=float, dest='ylo', default=None, help='ylo dimension for reading coordinates')
-    parser.add_argument('-yhi', type=float, dest='yhi', default=None, help='yhi dimension for reading coordinates')
-    parser.add_argument('-type', type=str, dest='type', default=None, help='Specify liquid or glass')
-    parser.add_argument('-traj_file_start', type=int, dest='traj_file_start', default=0,
+    parser.add_argument('--timestep', type=int, dest='timestep', default=None, help='Simulation timestep to read')
+    parser.add_argument('--xlo', type=float, dest='xlo', default=None, help='xlo dimension for reading coordinates')
+    parser.add_argument('--xhi', type=float, dest='xhi', default=None, help='xhi dimension for reading coordinates')
+    parser.add_argument('--ylo', type=float, dest='ylo', default=None, help='ylo dimension for reading coordinates')
+    parser.add_argument('--yhi', type=float, dest='yhi', default=None, help='yhi dimension for reading coordinates')
+    parser.add_argument('--type', type=str, dest='type', default=None, help='Specify liquid or glass')
+    parser.add_argument('--traj_file_start', type=int, dest='traj_file_start', default=0,
                         help='Initial directory name for trajectory files: usually begins with 0 or 1')
-    parser.add_argument('-num_trajectories', type=int, dest='num_trajectories', default=None,
+    parser.add_argument('--num_trajectories', type=int, dest='num_trajectories', default=None,
                         help='Number of trajectory files to read')
-    parser.add_argument('-traj_file_name', type=str, dest='traj_file_name', default='traj.atom',
+    parser.add_argument('--traj_file_name', type=str, dest='traj_file_name', default='traj.atom',
                         help='File name for trajectory files: traj.atom or traj.syz')
-    parser.add_argument('-trimfrac', type=float, dest='trimfrac', default=0.1,
+    parser.add_argument('--trimfrac', type=float, dest='trimfrac', default=0.1,
                         help='Trim fraction for plotting')
-    parser.add_argument('-figsize', type=float, dest='figsize', default=250,
+    parser.add_argument('--figsize', type=float, dest='figsize', default=250,
                         help='Image size in pixels (square image)')
 
     args = parser.parse_args()

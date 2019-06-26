@@ -8,7 +8,7 @@ class Generator():
 		self.im_shape = (im_size, im_size, num_channel)
 		self.index = 0
 		
-	def next(self, batch_size=None, data_aug=False, random_shuffle=True):
+	def next(self, batch_size=None, data_aug=False, random_shuffle=False):
 		if batch_size is None:
 			batch_size = len(self.metadata)
 
@@ -46,7 +46,7 @@ class Generator():
 
 		return images, labels
 
-	def data_in_batches(self, num_examples=None, batch_size=None, data_aug=False, random_shuffle=True):
+	def data_in_batches(self, num_examples=None, batch_size=None, data_aug=False, random_shuffle=False):
 		if num_examples is None:
 			num_examples = len(self.metadata)
 		num_examples = min(num_examples, len(self.metadata))
