@@ -199,6 +199,7 @@ class Molecule:
         plt.axis('equal')
 
         plt.savefig('tmp.png')
+        plt.close()
 
         img = PIL.Image.open("tmp.png")
         os.remove("tmp.png")
