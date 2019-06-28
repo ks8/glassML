@@ -1,10 +1,10 @@
 # Main function for training a CNN
 import os
-from parsing_cnn import parse_train_args
+from parsing import parse_train_args
 import tensorflow as tf
 import numpy as np
 import json
-from generator_glassliquid import Generator
+from generator import Generator
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn.metrics import roc_auc_score
@@ -12,8 +12,8 @@ from scipy.special import softmax
 from tqdm import tqdm
 from pprint import pformat
 from create_logger import create_logger
-from data_utils_cnn import get_unique_labels, create_one_hot_mapping, convert_to_one_hot
-from model_cnn import model
+from data_utils import get_unique_labels, create_one_hot_mapping, convert_to_one_hot
+from model import model
 
 
 def run_training(args, logger):

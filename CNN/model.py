@@ -1,6 +1,6 @@
 # CNN TensorFlow model
 import tensorflow as tf
-from nn_utils_cnn import weight_variable, bias_variable, conv2d
+from nn_utils import weight_variable, bias_variable, conv2d
 
 
 def model(x, n_outputs):

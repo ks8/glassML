@@ -1,6 +1,7 @@
 from scipy.misc import imread, imresize, imrotate
 import numpy as np
 
+
 class Generator():
 	def __init__(self, metadata, im_size, num_channel):
 		self.metadata = metadata

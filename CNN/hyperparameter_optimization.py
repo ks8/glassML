@@ -7,8 +7,8 @@ import os
 from hyperopt import fmin, hp, tpe, Trials
 import numpy as np
 
-from parsing_cnn import parse_train_args
-from run_training_cnn import run_training
+from parsing import parse_train_args
+from run_training import run_training
 
 from create_logger import create_logger
 
