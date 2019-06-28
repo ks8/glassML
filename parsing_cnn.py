@@ -32,7 +32,7 @@ def add_train_args(parser: ArgumentParser):
     parser.add_argument('--val_test_size', type=float, default=0.2, help='Fraction of val + test data')
     parser.add_argument('--log_frequency', type=int, default=10,
                         help='The number of batches between each logging of the training loss')
-    parser.add_argument('--warmup_epochs', type=int, default=20,
+    parser.add_argument('--warmup_epochs', type=int, default=2,
                         help='Number of epochs during which learning rate increases linearly from'
                              'init_lr to max_lr. Afterwards, learning rate decreases exponentially'
                              'from max_lr to final_lr.')

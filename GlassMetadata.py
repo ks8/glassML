@@ -1,7 +1,6 @@
 # Create data folder with metadata
 import json
 import os
-import re
 import argparse
 
 
@@ -14,7 +13,6 @@ def process_metadata(args):
     data = []
     for root, subfolders, files in os.walk(args.data_dir):
         for f in files:
-
             # Set path
             path = os.path.join(root, f)
 
