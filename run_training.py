@@ -199,12 +199,28 @@ def run_training(args: Namespace, logger: Logger = None):
 
             test_scores.append(np.mean(test_batch_scores))
 
+        # Get accuracy (assuming args.metric is set to AUC)
+        metric_func_accuracy = get_metric_func('accuracy')
+        test_scores_accuracy = []
+        for test_runs in range(args.num_test_runs):
+
+            test_batch_scores = evaluate(
+                model=model,
+                data=test_data,
+                metric_func=metric_func_accuracy,
+                args=args
+            )
+
+            test_scores_accuracy.append(np.mean(test_batch_scores))
+
         # Average test score
         avg_test_score = np.mean(test_scores)
-        info('Model {} test {} = {:.3f}'.format(model_idx, args.metric, avg_test_score))
+        avg_test_accuracy = np.mean(test_scores_accuracy)
+        info('Model {} test {} = {:.3f}, test {} = {:.3f}'.format(model_idx, args.metric,
+                                                                  avg_test_score, 'accuracy', avg_test_accuracy))
         writer.add_scalar('test_{}'.format(args.metric), avg_test_score, n_iter)
 
-        return avg_test_score  # For hyperparameter optimization or cross validation use
+        return avg_test_score, avg_test_accuracy  # For hyperparameter optimization or cross validation use
 
 
 if __name__ == '__main__':

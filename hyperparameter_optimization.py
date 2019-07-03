@@ -31,7 +31,8 @@ INT_KEYS = ['hidden_size', 'depth', 'ffn_num_layers', 'num_neighbors']
 def grid_search(args: Namespace):
 
     # Create logger
-    logger = create_logger(name='hyperparameter_optimization', save_dir=args.log_dir, quiet=True)
+    logger = create_logger(name='hyperparameter_optimization', save_dir=os.path.join(args.save_dir, 'optimization_log'),
+                           quiet=True)
     train_logger = create_logger(name='train', save_dir=args.save_dir, quiet=False)
 
     # Run grid search
@@ -55,16 +56,18 @@ def grid_search(args: Namespace):
         logger.info(hyperparams)
 
         # Train
-        avg_test_score = run_training(hyper_args, train_logger)
+        avg_test_score, avg_test_accuracy = run_training(hyper_args, train_logger)
 
         # Record results
         temp_model = build_model(hyper_args)
         num_params = param_count(temp_model)
         logger.info(f'num params: {num_params:,}')
         logger.info(f'{avg_test_score} {hyper_args.metric}')
+        logger.info(f'{avg_test_accuracy}' + ' accuracy')
 
         results.append({
             'avg_test_score': avg_test_score,
+            'avg_test_accuracy': avg_test_accuracy,
             'hyperparams': hyperparams,
             'num_params': num_params
         })
@@ -80,7 +83,7 @@ def grid_search(args: Namespace):
 
     if args.trials_dir is not None:
         # Load previous trials database
-        trials = pickle.load(open(args.trials_dir + '/' + 'trials.p', 'rb'))
+        trials = pickle.load(open(os.path.join(args.trials_dir, 'trials.p'), 'rb'))
     else:
         # Initialize an empty trials database
         trials = Trials()
@@ -89,7 +92,7 @@ def grid_search(args: Namespace):
     fmin(objective, SPACE, algo=tpe.suggest, trials=trials, max_evals=args.max_iters)
 
     # Save trials
-    pickle.dump(trials, open(args.log_dir + '/' + 'trials.p', 'wb'))
+    pickle.dump(trials, open(os.path.join(args.save_dir, 'optimization_log', 'trials.p'), 'wb'))
 
     # Report best result
     results = [result for result in results if not np.isnan(result['avg_test_score'])]
@@ -98,9 +101,10 @@ def grid_search(args: Namespace):
     logger.info(best_result['hyperparams'])
     logger.info(f'num params: {best_result["num_params"]:,}')
     logger.info(f'{best_result["avg_test_score"]} {args.metric}')
+    logger.info(f'{best_result["avg_test_accuracy"]}' + ' accuracy')
 
     # Save best hyperparameter settings as JSON config file
-    with open(args.log_dir + '/' + 'best-hyperparams.json', 'w') as f:
+    with open(os.path.join(args.save_dir, 'optimization_log', 'best-hyperparams.json'), 'w') as f:
         json.dump(best_result['hyperparams'], f, indent=4, sort_keys=True)
 
 
@@ -109,9 +113,6 @@ if __name__ == '__main__':
     add_train_args(parser)
     parser.add_argument('--max_iters', type=int, default=20,
                         help='Number of hyperparameter choices to try')
-    parser.add_argument('--log_dir', type=str,
-                        help='(Optional) Path to a directory where all results of the hyperparameter '
-                             'optimization will be written')
     parser.add_argument('--trials_dir', type=str, default=None,
                         help='(Optional) Path to a directory where previous trial results are written; hyperopt will'
                              'restart from this info')
