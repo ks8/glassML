@@ -1,5 +1,6 @@
 from argparse import Namespace
 from typing import Callable, List
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -28,7 +29,7 @@ def evaluate(model: nn.Module,
         model.eval()
 
         preds = []
-        for batch in data:
+        for batch in tqdm(data, total=len(data)):
 
             targets.extend(batch.y.float().unsqueeze(1))
 
